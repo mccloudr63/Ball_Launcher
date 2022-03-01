@@ -1,4 +1,3 @@
-from turtle import bgcolor, width
 import pygame
 import os
 import random
@@ -100,8 +99,6 @@ class Game(object):
         Example of drawing a rectangle:
         pygame.draw.rect(WIN, rgb_color, rect_obj)
         '''
-        # WIN.blit(BG_IMAGE, (0,0))
-        # pygame.draw.rect(WIN, WHITE, BORDER)
         self.render_tile_background(BG_TILE)
         self.draw_ball_crosshair()
         pygame.display.update()
@@ -149,18 +146,6 @@ class Game(object):
             max_x = max_x*-1
         WIN.blit(CROSSHAIR_IMAGE,((self.anchor_x-max_x)-CROSSHAIR_SCALE//2,(self.anchor_y-max_y)-CROSSHAIR_SCALE//2))
         pygame.draw.line(WIN,WHITE,(self.anchor_x,self.anchor_y),(self.anchor_x-max_x,self.anchor_y-max_y))
-
-        '''
-        angle = 30 degrees
-        hypotenuse = 50 units
-        opposite = 24.999999999999996 units
-
-        sin(30)=x/50
-
-        sin(30)*50
-        cos(30) = x/50
-        '''
-
 
 if __name__ == '__main__':
     game = Game()
