@@ -1,4 +1,4 @@
-from turtle import position
+from turtle import position, width
 import pygame
 import os
 import random
@@ -15,6 +15,7 @@ pygame.display.set_caption(GAME_NAME)
 #Timing Values
 FPS = 60
 BALL_VEL = 10
+LAUNCH_DELAY_MULTIPLIER = 5
 
 #COLORS
 WHITE = (255,255,255)
@@ -27,7 +28,7 @@ INDIGO = (20,10,40)
 ORANGE = (255, 165, 0)
 
 #Dimensions
-BALL_SCALE = 20
+BALL_SCALE = 15
 CROSSHAIR_SCALE = 50
 CROSSHAIR_LINE_LENGTH = 300
 MIN_ANGLE = 25
@@ -57,7 +58,7 @@ class Ball(pygame.sprite.Sprite):
         self.image = DEFAULT_BALL_IMAGE
         self.rect = pygame.Rect(spawn_x, spawn_y, BALL_SCALE, BALL_SCALE)
         self.mask = pygame.mask.from_surface(self.image)
-        self.launch_timer = launch_timer
+        self.launch_timer = launch_timer * LAUNCH_DELAY_MULTIPLIER
         self.x = spawn_x
         self.y = spawn_y
         self.direction_x = 1 #for LEFT: 1, for RIGHT: -1
@@ -78,25 +79,10 @@ class Ball(pygame.sprite.Sprite):
         self.x = self.x - x_movement * self.direction_x  <--- self.direction_x (LEFT = 1, for RIGHT = -1)
         self.y = self.y - y_movement * self.direction_y  <--- self.direction_y (UP = 1, for DOWN = -1)
         '''
-        print('ANGLE')
-        print(crosshair_angle)
-        print('X Before')
-        print(self.x)
-        print('Y Before')
-        print(self.y)
-        x_movement = math.cos(math.degrees(crosshair_angle))*BALL_VEL
-        y_movement = math.sin(math.degrees(crosshair_angle))*BALL_VEL
+        x_movement = math.cos(math.radians(crosshair_angle))*BALL_VEL
+        y_movement = math.sin(math.radians(crosshair_angle))*BALL_VEL
         self.x = self.x - x_movement*self.direction_x
         self.y = self.y - y_movement*self.direction_y
-        print('X Movement')
-        print(x_movement)
-        print('X After')
-        print(self.x)
-        print('Y Movement')
-        print(y_movement)
-        print('Y After')
-        print(self.y)
-
 
 class Enemy(pygame.sprite.Sprite):
     def __init__(self, enemy_image: pygame.Surface, spawn_x, spawn_y, hp=10):
@@ -119,6 +105,7 @@ class Game(object):
         self.crosshair_y = self.anchor_y
         self.crosshair_angle = 90
         self.balls = []
+        self.num_balls = 3
         self.shooting = False
         self.game_setup()
         self.main()
@@ -128,8 +115,14 @@ class Game(object):
         self.anchor_x = WIDTH//2
         self.anchor_y = ANCHOR_Y
         self.shooting = False
-        ball = Ball(self.anchor_x,self.anchor_y,0)
-        self.balls = [ball]
+        self.balls = []
+        self.num_balls = 3
+        self.ball_reset()
+
+    def ball_reset(self):
+        for i in range(0,self.num_balls):
+            ball = Ball(self.anchor_x,self.anchor_y,i)
+            self.balls.append(ball)
 
     def handle_collisions(self):
         '''
@@ -162,7 +155,10 @@ class Game(object):
                 ball.launch_timer -= 1
                 if ball.launch_timer < 0:
                     ball.calculate_movement(self.crosshair_angle)
-                    WIN.blit(ball.image,(ball.x-BALL_SCALE//2,ball.y-BALL_SCALE//2))
+                    if 0 > ball.x or ball.x > WIDTH or 0 > ball.y or ball.y > HEIGHT:
+                        self.balls.remove(ball)
+                    else: 
+                        WIN.blit(ball.image,(ball.x-BALL_SCALE//2,ball.y-BALL_SCALE//2))
         else:
             self.draw_ball_crosshair()
 
@@ -182,6 +178,9 @@ class Game(object):
                     self.shooting = True            
             self.handle_collisions()
             self.draw_window()
+            if self.balls == []:
+                self.shooting = False
+                self.ball_reset()
 
     def render_tile_background(self, tile_image: pygame.Surface):
         tile_width = tile_image.get_width()
